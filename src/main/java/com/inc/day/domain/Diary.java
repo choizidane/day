@@ -1,8 +1,17 @@
 package com.inc.day.domain;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
+
 public class Diary {
 	private int id;
-	private String u_id,title,content,regdate;
+	private String u_id;
+	@Size(min=0, max=15, message="15글자이내로 작성해주세요")
+	private String title;
+	@NotEmpty(message="한글자이상입력해주세요")
+	@Size(max=300, message="300글자이내로작성해주세요")
+	private String content;
+	private String regdate;
 	
 	public int getId() {
 		return id;
