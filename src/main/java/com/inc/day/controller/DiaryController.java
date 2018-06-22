@@ -1,5 +1,6 @@
 package com.inc.day.controller;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.inc.day.domain.Diary;
+import com.inc.day.domain.Member;
 import com.inc.day.service.DiaryService;
 
 @Controller
@@ -20,8 +22,9 @@ public class DiaryController {
 	private DiaryService diaryService;
 	
 	@GetMapping("/")
-	public String main(Model model) {
-		model.addAttribute("diaryList", diaryService.list());
+	public String main(Model model, HttpSession session) {
+		Member member = (Member)session.getAttribute("member");
+		model.addAttribute("diaryList", diaryService.list(member.getId()));
 		return "main";
 	}
 	
@@ -32,10 +35,12 @@ public class DiaryController {
 	}
 	
 	@PostMapping("/diary/add")
-	public String add(@ModelAttribute @Valid Diary diary, BindingResult result, Model model) {
+	public String add(@ModelAttribute @Valid Diary diary, BindingResult result, Model model, HttpSession session) {
 		if(result.hasErrors()) {
 			return "diary/add";
 		}
+		Member member = (Member)session.getAttribute("member");
+		diary.setU_id(member.getId());
 		diaryService.add(diary);
 		return "redirect:/";
 	}

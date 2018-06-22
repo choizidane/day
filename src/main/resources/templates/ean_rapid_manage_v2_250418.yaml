@@ -1,0 +1,841 @@
+---
+swagger: '2.0'
+info:
+  title: Rapid
+  description: Rapid Manage Booking
+  version: '2'
+host: api.ean.com
+basePath: "/2"
+schemes:
+- https
+produces:
+- application/json
+tags:
+- name: Manage Booking
+  description: Retrieve existing itineraries or cancel existing rooms.
+paths:
+  "/itineraries/{itinerary_id}":
+    get:
+      description: "This service returns itinerary details and tokenized links to resume or cancel the booking. There are two methods to retrieve a booking:
+      \n*  Using the tokenized URI included in the original Book response. \n Example: `https://api.ean.com/2/itineraries/8955599932111?token=QldfCGlcUA4GXVlSAQ4W`
+      \n*  Passing the Itinerary ID and Email as query parameters. \n Example: `https://api.ean.com/2/itineraries/8955599932111?email=customer@email.com`"
+      summary: Retrieve Booking
+      tags:
+      - Manage Booking
+      parameters:
+      - "$ref": "#/parameters/accept"
+      - "$ref": "#/parameters/acceptEncoding"
+      - "$ref": "#/parameters/authorization"
+      - "$ref": "#/parameters/customerIp"
+      - "$ref": "#/parameters/customerSessionId"
+      - "$ref": "#/parameters/user_agent"
+      - name: Test
+        in: header
+        required: false
+        type: string
+        enum:
+        - standard
+        - service_unavailable
+        - unknown_internal_error
+        description: "Passing `standard` in the Test header will retrieve a test booking. Passing any of the errors listed below will return a stubbed error response that you can use to test your error handling code. \n Refer to the [Test Request](https://developer.ean.com/reference/rapid-booking-test-request) documentation for more details on how these header values are used.<br>\n* `standard` - Requires
+ a valid test booking \n* `service_unavailable` \n* `unknown_internal_error`
+          \ \n"
+      - "$ref": "#/parameters/itinerary_id"
+      - "$ref": "#/parameters/retrieveToken"
+      - in: query
+        name: email
+        description: |
+          Email associated with the booking. Required if a token is not provided with the request <br>
+          Example: `customer@email.com`.
+        required: false
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            description: The retrieval response.
+            properties:
+              itinerary_id:
+                description: The itinerary id.
+                example: 8999989898988
+                type: string
+              property_id:
+                description: The property id. Use this id to look up the localized content for the property in your own content database or by passing it into the [Property Content API](https://developer.ean.com/documentation/rapid-content#/Content/getPropertyContent)
+                example: 8150374
+                type: string
+              rooms:
+                type: array
+                items:
+                  type: object
+                  description: The room information.
+                  properties:
+                    id:
+                      description: The room ID. Use this ID to look up the localized room type information in your own content database or by calling the [Property Content API](https://developer.ean.com/documentation/rapid-content#/Content/getPropertyContent).
+                      example: '926784314'
+                      type: string
+                    property_confirmation_id:
+                      description: 'The confirmation id provided by the hotel. When a booking is made, some hotels are directly integrated with our systems and can provide this id right away. However, many hotels will manually provide this id a day or more after the booking has been created. If no id has been provided, this field will not be present in the response.'
+                      example: BEF23123AA
+                      type: string
+                    bed_group_id:
+                      type: string
+                      description: Use this id to look up the localized room type information in your own content database or by calling the [Property Content API](https://developer.ean.com/documentation/rapid-content#/Content/getPropertyContent).
+                      example: d395b56d-d31d-4a84-ad2b-66820b1d48e2
+                    arrival:
+                      description: The arrival date of the itinerary.
+                      example: '2017-09-21'
+                      type: string
+                    departure:
+                      description: The departure date of the itinerary.
+                      example: '2017-09-23'
+                      type: string
+                    number_of_adults:
+                      description: The number of adults staying in the room.
+                      example: 2
+                      type: number
+                    child_ages:
+                      description: The ages of children for the room.
+                      example:
+                      - 2
+                      - 3
+                      type: array
+                      items:
+                        type: number
+                    given_name:
+                      description: The first name of the main guest staying in the
+                        room.
+                      example: John
+                      type: string
+                    family_name:
+                      description: The last name of the main guest staying in the
+                        room.
+                      example: Smith
+                      type: string
+                    status:
+                      description: The booking status of the room. \n The only time a booking will ever have a status of “pending” is if `hold=true`” was sent in the original booking request and the subsequent resume call has not been made. This is because the booking has not yet been completed. In all other scenarios, the booking status will be either `booked` or `canceled`. 
+                      example: booked
+                      type: string
+                      enum:
+                      - pending
+                      - booked
+                      - canceled
+                    special_request:
+                      description: Any special request info associated with the room.
+                      example: Please give me extra towels.
+                      type: string
+                    smoking:
+                      description: Indicates if the room is smoking or non-smoking.
+                      example: false
+                      type: boolean
+                    rate:
+                      type: object
+                      description: The rate information associated with the itinerary.
+                      properties:
+                        id:
+                          description: The id of the rate.
+                          example: 035943984
+                          type: string
+                        merchant_of_record:
+                          description: The merchant responsible for collecting payment.
+                          example: expedia
+                          type: string
+                          enum:
+                          - expedia
+                          - property
+                        refundable:
+                          description: Indicates if the itinerary is refundable.
+                          example: false
+                          type: boolean
+                        amenities:
+                          type: array
+                          items:
+                            description: The ids for the amenities (value-adds) included with the booking. Use these ids to look up the localized amenity descriptions in your own content database or via the [Property Content API](https://developer.ean.com/documentation/rapid-content#/Content/getPropertyContent). 
+                            example: 12345
+                            type: string
+                        nightly:
+                          type: array
+                          items:
+                            type: array
+                            items:
+                              type: object
+                              description: Array of arrays of amount objects. Each sub-array of amount objects represents a single night’s charges.
+                              properties:
+                                value:
+                                  description: The amount of the nightly rate.
+                                  example: 111
+                                  type: string
+                                type:
+                                  description: The type of the nightly rate.
+                                  example: base_rate
+                                  type: string
+                                  enum:
+                                   - base_rate
+                                   - tax_and_service_fee
+                                   - extra_person_fee
+                                   - compensation
+                                   - property_fee
+                                currency:
+                                  description: The 3-character code (ISO 4217 format) for the currency of the nightly rate.
+                                  example: USD
+                                  type: string
+                        stay:
+                          type: array
+                          items:
+                            type: object
+                            description: Array of amount objects. Details any charges that apply to the entire stay (not divided per-night). Any per-room adjustments are applied to the `base_rate` amount within this object.
+                            properties:
+                              value:
+                                description: The amount of the stay rate.
+                                example: 123
+                                type: string
+                              type:
+                                description: The type of the stay rate.
+                                example: base_rate
+                                type: string
+                                enum:
+                                   - base_rate
+                                   - tax_and_service_fee
+                                   - extra_person_fee
+                                   - compensation
+                                   - property_fee
+                              currency:
+                                description: The 3-character code (ISO 4217 format) for the currency of the nightly rate.
+                                example: USD
+                                type: string
+                        cancel_penalties:
+                          type: array
+                          items:
+                            type: object
+                            description: Array of amount objects. Details any monetary penalties if the booking is canceled within the start and end dates/times of the cancelation penalty window.
+                            properties:
+                              percent:
+                                description: The percentage of the nightly rate that will be charged if the booking is canceled within the cancel policy window.
+                                example: 1
+                                type: number
+                              start:
+                                description: The start date/time of the cancel penalty window.
+                                example: '2018-01-01T01:01:01.000-08:00'
+                                type: string
+                              end:
+                                description: The end date/time of the cancel penalt window.
+                                example: '2018-12-12T01:01:01.000-08:00'
+                                type: string
+                              amount:
+                                description: The monetary amount that will be charged if the booking is canceled within the cancel policy window.
+                                example: 250
+                                type: number
+                              currency:
+                                description: The currency of the amount that will be charged if the booking is canceled within the cancel policy window.
+                                example: USD
+                                type: string
+                              nights:
+                                description: The number of nights that will be charged if the booking is canceled within the cancel policy window.
+                                example: 2
+                                type: number
+                        deposit_policies:
+                          example:
+                          - amount: 250
+                            due: '2018-12-12T01:01:01.000-08:00'
+                          type: array
+                          items:
+                            type: object
+                            description: 'Array of amount objects. Details any deposit amounts required for Hotel Collect bookings. Each object contains two fields: A `night`, `amount`, `percent`, or `remainder` field to indicate how the deposit is calculated, and a `due` field to indicate when the deposit will be charged.'
+                            properties:
+                              night:
+                                description: The number of nights required as deposit.
+                                example: 1
+                                type: number
+                              amount:
+                                description: The amount required as deposit.
+                                example: '200.00'
+                                type: string
+                              percent:
+                                description: The required percent as deposit.
+                                example: 30
+                                type: number
+                              remainder:
+                                description: If the remainder is required as deposit.
+                                example: true
+                                type: boolean
+                              due:
+                                description: The due date/time of the deposit.
+                                example: '2018-12-12T01:01:01.000-08:00'
+                                type: string
+                        fees:
+                          type: array
+                          items:
+                            type: object
+                            description: Any fees associated with the itinerary.
+                            properties:
+                              type:
+                                description: The type of fee.
+                                example: resort_fee
+                                type: string
+                                enum:
+                                - resort_fee
+                                - mandatory_tax
+                                - mandatory_fee
+                              value:
+                                description: The amount of the fee.
+                                example: 20
+                                type: string
+                              currency:
+                                description: The currency of the fee.
+                                example: USD
+                                type: string
+                              scope:
+                                description: The scope of the fee.
+                                example: per_accommodation
+                                type: string
+                                enum:
+                                - unknown
+                                - per_person
+                                - per_room
+                                - per_accommodation
+                                - per_house
+                                - per_apartment
+                                - per_adult
+                              frequency:
+                                description: The frequency of the fee.
+                                example: per_day
+                                type: string
+                                enum:
+                                - unknown
+                                - per_night
+                                - per_day
+                                - per_stay
+                                - per_week
+                                - round_trip
+                                - one_way
+                      required:
+                      - id
+                      - merchant_of_record
+                      - refundable
+                      - nightly
+                      - fees
+                    links:
+                      type: object
+                      properties:
+                        cancel:
+                          type: object
+                          description: The link to cancel a room.
+                          properties:
+                            method:
+                              description: 'The HTTP request method to be used when canceling a room'
+
+
+                              example: DELETE
+                              type: string
+                            href:
+                              description: 'The tokenized URL for canceling a room'
+
+
+                              example: "/2/itineraries/8999989898988/rooms/d08572fc-82d2-4d5d-ad30-60f5be7fb53e?token=MY5S3j36cOcLfLBZjPYQ1abhfc8CqmjmFVzkk7euvWaunE57LLeDgaxm516m"
+                              type: string
+                          required:
+                          - method
+                          - href
+                      required:
+                      - cancel
+                  required:
+                  - id
+                  - bed_group_id
+                  - arrival
+                  - departure
+                  - number_of_adults
+                  - given_name
+                  - family_name
+                  - status
+                  - smoking
+                  - links
+              billing_contact:
+                "$ref": "#/definitions/BillingContact"
+              adjustment:
+                type: object
+                description: 'Any itinerary-level price adjustments. NOTE: Room-level price adjustments are taken out of the nightly base rate.'
+                properties:
+                  value:
+                    description: The amount of the adjustment.
+                    example: "-100.0000"
+                    type: string
+                  type:
+                    description: The type of the adjustment.
+                    example: base_rate
+                    type: string
+                  currency:
+                    description: The currency of the adjustment.
+                    example: USD
+                    type: string
+                required:
+                - value
+                - type
+                - currency
+              creation_date_time:
+                description: The creation date/time of the booking.
+                example: '2017-08-17T13:31:15.523Z'
+                type: string
+              affiliate_reference_id:
+                description: Your unique reference value. This field supports a maximum
+                  of 36 characters and is required to be unique (if provided).
+                type: string
+                example: 4480
+              affiliate_metadata:
+                description: "Field that stores up to 256 characters of additional metadata with the itinerary. Will be returned on all retrieve responses for this itinerary. When passing multiple key:value pairs, use the format ‘key1:value|key2:value|key3:value’."
+                type: string
+                example: This booking was made with EAN.
+            required:
+            - itinerary_id
+            - creation_date_time
+        '400':
+          description: Bad Request
+          schema:
+            "$ref": "#/definitions/Rapid400Error"
+        '401':
+          "$ref": "#/responses/Error401"
+        '403':
+          "$ref": "#/responses/Error403"
+        '404':
+          description: Not Found
+          schema:
+            "$ref": "#/definitions/ItineraryNotFound404Error"
+        '426':
+          "$ref": "#/responses/Error426"
+        '500':
+          "$ref": "#/responses/Error500"
+        '503':
+          "$ref": "#/responses/Error503"
+    delete:
+      description: 'This link will return only if the booking was created on-hold
+        using the `hold` flag. See our [Hold & Resume](https://developer.ean.com/reference/hold-resume)
+        reference for complete documentation.
+
+'
+      summary: Cancel Held Booking
+      tags:
+      - Manage Booking
+      parameters:
+      - "$ref": "#/parameters/accept"
+      - "$ref": "#/parameters/acceptEncoding"
+      - "$ref": "#/parameters/authorization"
+      - "$ref": "#/parameters/customerIp"
+      - "$ref": "#/parameters/customerSessionId"
+      - "$ref": "#/parameters/user_agent"
+      - name: Test
+        in: header
+        required: false
+        type: string
+        enum:
+        - standard
+        - service_unavailable
+        - unknown_internal_error
+        description: "The cancel call has a test header that can be used to return
+          set responses with the following keywords:<br>\n* `standard` - Requires
+          a valid test held booking.\n* `service_unavailable` \n* `unknown_internal_error`
+          \   \n"
+      - "$ref": "#/parameters/itinerary_id"
+      - "$ref": "#/parameters/token"
+      responses:
+        '202':
+          description: Accepted - Request is valid but the state of the booking is
+            unknown. Make a retrieve call to verify the booking has been canceled
+            properly.
+        '204':
+          description: No Content - Booking has successfully canceled.
+        '400':
+          description: Bad Request
+          schema:
+            "$ref": "#/definitions/Rapid400Error"
+        '401':
+          "$ref": "#/responses/Error401"
+        '403':
+          "$ref": "#/responses/Error403"
+        '404':
+          description: Not Found
+          schema:
+            "$ref": "#/definitions/ItineraryNotFound404Error"
+        '426':
+          "$ref": "#/responses/Error426"
+        '500':
+          "$ref": "#/responses/Error500"
+        '503':
+          "$ref": "#/responses/Error503"
+  "/itineraries/{itinerary_id}/rooms/{room_id}":
+    delete:
+      description: 'This link will be available in the booking response and in the
+        retrieve response.
+
+'
+      summary: Cancel a room.
+      tags:
+      - Manage Booking
+      parameters:
+      - "$ref": "#/parameters/accept"
+      - "$ref": "#/parameters/acceptEncoding"
+      - "$ref": "#/parameters/authorization"
+      - "$ref": "#/parameters/customerIp"
+      - "$ref": "#/parameters/customerSessionId"
+      - "$ref": "#/parameters/user_agent"
+      - name: Test
+        in: header
+        required: false
+        type: string
+        enum:
+        - standard
+        - service_unavailable
+        - unknown_internal_error
+        - post_stay_cancel
+        description: "The cancel call has a test header that can be used to return
+          set responses with the following keywords:<br>\n* `standard` - Requires
+          valid test booking.\n* `service_unavailable` \n* `unknown_internal_error`
+          \  \n* `post_stay_cancel`  \n"
+      - "$ref": "#/parameters/itinerary_id"
+      - in: path
+        name: room_id
+        description: |
+          Specific room ID on the itinerary to be cancelled.<br>
+          Example: `29812c54-a5f9-4402-9252-4cdd8ce82aa1`
+        required: true
+        type: string
+      - "$ref": "#/parameters/token"
+      responses:
+        '202':
+          description: Accepted - Request is valid but the state of the booking is
+            unknown. Make a retrieve call to verify the booking has been canceled
+            properly.
+        '204':
+          description: No Content - Booking has successfully been canceled.
+        '400':
+          description: Bad Request
+          schema:
+            "$ref": "#/definitions/Rapid400Error"
+        '401':
+          "$ref": "#/responses/Error401"
+        '403':
+          "$ref": "#/responses/Error403"
+        '404':
+          description: Not Found
+          schema:
+            "$ref": "#/definitions/ItineraryNotFound404Error"
+        '426':
+          "$ref": "#/responses/Error426"
+        '500':
+          "$ref": "#/responses/Error500"
+        '503':
+          "$ref": "#/responses/Error503"
+parameters:
+  accept:
+    in: header
+    name: Accept
+    description: Must be `application/json`
+    required: true
+    default: application/json
+    type: string
+  acceptEncoding:
+    in: header
+    name: Accept-Encoding
+    description: Must be `gzip`
+    required: true
+    default: gzip
+    type: string
+  authorization:
+    in: header
+    name: Authorization
+    description: The custom generated authentication header. Refer to our [signature
+      authentication](https://developer.ean.com/reference/signature-authentication)
+      page for full details.
+    required: true
+    type: string
+  customerIp:
+    in: header
+    name: Customer-Ip
+    description: |
+      IP address of the customer, as captured by your integration. Send IPV4 addresses only.<br>
+      Ensure your integration passes the customer's IP, not your own. This value helps determine their location and assign the correct payment gateway.<br>
+      Also used for fraud recovery and other important analytics.
+    required: true
+    default: 10.10.10.10
+    type: string
+  customerSessionId:
+    in: header
+    name: Customer-Session-Id
+    description: |
+      Insert your own unique value for each user, beginning with the first API call.
+      Continue to pass the same value for each customer during each booking session, using a new value for every new customer session.<br>
+      Including this value greatly eases EAN's internal debugging process for issues with partner requests, as it explicitly links together request paths for individual customers.
+    required: false
+    type: string
+  language:
+    in: query
+    name: language
+    description: |
+      Desired language for the response as a subset of BCP47 format that only uses hyphenated pairs of two-digit language and country codes. Use only ISO639-1 alpha 2 language codes and ISO3166-1 alpha 2 country codes. See [https://www.w3.org/International/articles/language-tags/](https://www.w3.org/International/articles/language-tags/)
+
+      <br>Example: `en-US`
+    required: true
+    default: en-US
+    type: string
+  token:
+    in: query
+    name: token
+    description: |
+      Provided as part of the link object and used to maintain state across calls.<br>
+      Example: `MY5S3j36cOcLfLBZjPYQ1abhfc8CqmjmFVzkk7euvWaunE57LLeDgaxm516m`
+    required: true
+    type: string
+  retrieveToken:
+    in: query
+    name: token
+    description: |
+      The token is a hash of several parameter values that are conveniently passed from one call to the next, starting at Shop. This simplifies each subsequent call by limiting the amount of information required at each step and reduces the potential for errors. <new paragraph> Token values cannot be viewed or changed.<br>
+      Example: `MY5S3j36cOcLfLBZjPYQ1abhfc8CqmjmFVzkk7euvWaunE57LLeDgaxm516m`
+    required: false
+    type: string
+  itinerary_id:
+    in: path
+    name: itinerary_id
+    description: |
+      This parameter is used only to prefix the token value - no ID value is used.<br>
+      Example: `8955599932111`
+    required: true
+    type: string
+  billing_terms:
+    in: query
+    name: billing_terms
+    description: 'This parameter is to specify the terms of how a resulting booking
+      should be billed. If this field is needed, the value for this will be provided
+      to you seperately by EAN.<br>
+
+'
+    required: false
+    type: string
+  payment_terms:
+    in: query
+    name: payment_terms
+    description: 'This parameter is to specify what terms should be used when being
+      paid for a resulting booking. If this field is needed, the value for this will
+      be provided to you seperately by EAN.<br>
+
+'
+    required: false
+    type: string
+  partner_point_of_sale:
+    in: query
+    name: partner_point_of_sale
+    description: "This parameter is to specify what point of sale the partner wants
+      shop/book under. If this field is needed, the value for this will be provided
+      to you seperately by EAN.  \n"
+    type: string
+  content_type:
+    in: header
+    name: Content-Type
+    description: |
+      This parameter is to specify which format the partner wants their response to be in. The only supported value is application/json at the moment.
+      Example: `application/json`
+    required: true
+    default: application/json
+    type: string
+  user_agent:
+    in: header
+    name: User-Agent
+    description: |
+      The customer's browser User-Agent header. JavaScript's "navigator.userAgent" command will provide that value. If you are building an application then the User-Agent value should be `<app name>/<app version>` (e.g. TravelNow/3.30.112).
+      Example: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36`
+
+      Example: `TravelNow/3.30.112`
+    required: true
+    type: string
+definitions:
+  Error:
+    type: object
+    description: The overall class of error that occured.
+    properties:
+      type:
+        description: The error type.
+        type: string
+      message:
+        description: A human readable message giving details about this error.
+        type: string
+      errors:
+        type: array
+        description: An array of all the actual errors that occured.
+        items:
+          type: object
+          description: An individual error.
+          properties:
+            type:
+              type: string
+              description: The error type.
+            message:
+              type: string
+              description: A human readable message giving details about this error.
+            fields:
+              type: array
+              description: Details about the specific fields that had an error.
+              items:
+                type: object
+                description: An individual field that had an error.
+                properties:
+                  name:
+                    type: string
+                    description: The field that had an error.
+                  type:
+                    type: string
+                    description: The type of the field that had an error.
+                  value:
+                    type: string
+                    description: The value of the field that had an error.
+  BillingContact:
+    type: object
+    required:
+    - given_name
+    - family_name
+    - email
+    - phone
+    - address
+    properties:
+      given_name:
+        description: First/given name of the payment type account holder.
+        type: string
+        example: John
+      family_name:
+        description: Last/family name of the payment type account holder.
+        type: string
+        example: Smith
+      email:
+        description: Email of the payment type account holder.
+        type: string
+        example: smith@email.com
+      phone:
+        description: Contact phone for the payment type account holder, please do
+          not include any special characters.
+        type: string
+        example: '4875550077'
+      address:
+        type: object
+        required:
+        - line_1
+        - city
+        - country_code
+        properties:
+          line_1:
+            description: First line of customer's street address
+            type: string
+            example: 555 1st St
+          line_2:
+            description: Second line of customer's street address
+            type: string
+            example: 10th Floor
+          line_3:
+            description: Third line of customer's street address
+            type: string
+            example: Unit 12
+          city:
+            description: Customer's city
+            type: string
+            example: Seattle
+          state_province_code:
+            description: Customer's state or province code
+            type: string
+            example: WA
+          postal_code:
+            description: Customer's postal code
+            type: string
+            example: '98121'
+          country_code:
+            description: Customer's country code, in two-letter ISO 3166-1 alpha-2
+              format
+            type: string
+            example: US
+  Rapid400Error:
+    type: object
+    properties:
+      type:
+        description: The error type.
+        type: string
+        example: invalid_input
+      message:
+        description: A human readable message giving details about this error.
+        type: string
+        example: An invalid request was sent in, please check the nested errors for
+          details.
+      errors:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+              description: The error type.
+              example: link.invalid
+            message:
+              type: string
+              description: A human readable message giving details about this error.
+              example: Link is invalid.
+  ItineraryNotFound404Error:
+    type: object
+    properties:
+      type:
+        type: string
+        description: The error type.
+        example: resource_not_found
+      message:
+        type: string
+        description: A human readable message giving details about this error.
+        example: Itinerary was not found with provided request.
+responses:
+  Error401:
+    description: Unauthorized
+    schema:
+      "$ref": "#/definitions/Error"
+    examples:
+      Example:
+        type: request_unauthenticated
+        message: Data required to authenticate your request is missing. Ensure that
+          your request follows the guidelines in our documentation.
+  Error403:
+    description: Forbidden
+    schema:
+      "$ref": "#/definitions/Error"
+    examples:
+      Example:
+        type: request_unauthenticated
+        message: Your request could not be authenticated. Ensure that your request
+          follows the guidelines in our documentation.
+        fields:
+        - name: apikey
+          type: header
+          value: jaj3982k239dka328e
+        - name: signature
+          type: header
+          value: 129d75332614a5bdbe0c7eb540e95a65f9d85a5b53dabb38d19b37fad6312a2bd25c12ee5a82831d55112087e1b
+        - name: timestamp
+          type: header
+          value: 198284729
+        - name: servertimestamp
+          type: server
+          value: 198284729
+  Error426:
+    description: Upgrade Required
+    schema:
+      "$ref": "#/definitions/Error"
+    examples:
+      Example:
+        type: upgrade_required
+        message: This service requires the use of TLS.
+  Error500:
+    description: Unknown Internal Error
+    schema:
+      "$ref": "#/definitions/Error"
+    examples:
+      Example:
+        type: unknown_internal_error
+        message: An internal server error has occurred.
+  Error503:
+    description: Service Unavailable
+    schema:
+      "$ref": "#/definitions/Error"
+    examples:
+      Example:
+        type: service_unavailable
+        message: This service is currently unavailable.

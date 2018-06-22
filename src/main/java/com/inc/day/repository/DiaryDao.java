@@ -24,4 +24,8 @@ public class DiaryDao {
 		sqlSession.insert("diary.add", diary);
 	}
 
+	public List<Diary> list(String id) {
+		return sqlSession.selectList("diary.list", id);
+	}
+
 }

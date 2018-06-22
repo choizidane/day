@@ -3,15 +3,16 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="diary">
-	<select id="list" resultType="diary">
-		select * from day order by regdate desc
+	<select id="list" resultType="diary" parameterType="string">
+		select * from day <if test="value != null">where u_id = #{value}</if> order by regdate desc
 	</select>
 	
 	<insert id="add" parameterType="diary">
 		insert into day values(seq_day_id.nextval,
-												'choizidane',
+												#{u_id},
 												#{title},
 												#{content},
 												sysdate)
 	</insert>
+	
  </mapper>
