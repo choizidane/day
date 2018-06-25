@@ -29,4 +29,12 @@ create table member(
 );
 
 alter table day add constraint fk_day_u_id foreign key(u_id) references member(id);
+
+create table tag(
+    id number primary key,
+    d_id number references day(id),
+    name varchar2(30) not null,
+    color varchar2(10) default 'default' not null
+);
     
+create sequence seq_tag_id;
